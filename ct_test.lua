@@ -50,20 +50,17 @@ function wa_lua_on_handshake_cb(ctx)
         local method = sub(buf, 0, index - 1)
         local res = method .. 'http://' .. host .. ':' .. port .. sub(buf, index) ..
                     'MyTest: Add http test flag\r\n\r\n'
+        ctx_write(ctx, res)
     end
 
     if flags[uuid] ~= kHttpHeaderSent then
-        local host = ctx_address_host(ctx)
-        local port = ctx_address_port(ctx)
         local res = 'CONNECT ' .. host .. ':' .. port .. ' HTTP/1.1\r\n' ..
                     'Host: ' .. host .. ':' .. port .. '\r\n' ..
                     'Proxy-Connection: Keep-Alive\r\n' ..
                     'MyTest: Add https test flag\r\n\r\n' 
+        ctx_write(ctx, res)
     end
-    
-    ctx_write(ctx, res)
     flags[uuid] = kHttpHeaderSent
-    
     return false
 end
 
