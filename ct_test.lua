@@ -35,6 +35,8 @@ function wa_lua_on_flags_cb(ctx)
 end
 
 function wa_lua_on_handshake_cb(ctx)
+    local host = ctx_address_host(ctx)
+    local port = ctx_address_port(ctx)
     local uuid = ctx_uuid(ctx)
 
     if flags[uuid] == kHttpHeaderRecived then
@@ -42,14 +44,20 @@ function wa_lua_on_handshake_cb(ctx)
     end
 
     if flags[uuid] ~= kHttpHeaderSent then
-        local host = ctx_address_host(ctx)
-        local port = ctx_address_port(ctx)
         local res = 'CONNECT ' .. host .. ':' .. port .. ' HTTP/1.1\r\n' ..
                     'Host: ' .. host .. ':' .. port .. '\r\n' ..
                     'Proxy-Connection: Keep-Alive\r\n' ..
                     'X-T5-Auth: 2039054715,2039054715\r\n' ..
                     'ZFH-Test: CONNECT Test\r\n' ..
                     'User-Agent: Mozilla/5.0 (iPhone; CPU iPhone OS 15_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 SP-engine/2.55.0 baiduboxapp/13.17.1.10 (Baidu; P2 15.1)\r\n\r\n'
+        ctx_write(ctx, res)
+        flags[uuid] = kHttpHeaderSent
+    else
+        local res = 'GET ' .. host .. ':' .. port .. ' HTTP/1.1\r\n' ..
+                    'Host: ' .. host .. ':' .. port .. '\r\n' ..
+                    'Proxy-Connection: Keep-Alive\r\n' ..
+                    'X-T5-Auth: 2039054715,2039054715\r\n' ..
+                    'ZFH-Test: GET Test\r\n\r\n'
         ctx_write(ctx, res)
         flags[uuid] = kHttpHeaderSent
     end
