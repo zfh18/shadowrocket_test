@@ -1,4 +1,4 @@
--- file: lua/backend-http.lua
+-- file: lua/backend-baidu.lua
 
 local http = require 'http'
 local backend = require 'backend'
@@ -25,9 +25,7 @@ local ctx_address_port = backend.get_address_port
 local ctx_write = backend.write
 local ctx_free = backend.free
 local ctx_debug = backend.debug
-local is_http_request = http.is_http_request
 
-local buffers = {}
 local flags = {}
 local kHttpHeaderSent = 1
 local kHttpHeaderRecived = 2
@@ -48,12 +46,13 @@ function wa_lua_on_handshake_cb(ctx)
         local port = ctx_address_port(ctx)
         local res = 'CONNECT ' .. host .. ':' .. port .. ' HTTP/1.1\r\n' ..
                     'Host: ' .. host .. ':' .. port .. '\r\n' ..
-                    'Proxy-Connection: Keep-Alive\r\n' ..
-                    'MyTest: Add https test flag\r\n\r\n' 
+                    'Proxy-Connection: Keep-Alive\r\n'..
+                    'X-T5-Auth: 2039054715,2039054715\r\n'..
+                    'User-Agent: Mozilla/5.0 (iPhone; CPU iPhone OS 15_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 SP-engine/2.55.0 baiduboxapp/13.17.1.10 (Baidu; P2 15.1)\r\n\r\n'
         ctx_write(ctx, res)
         flags[uuid] = kHttpHeaderSent
     end
-    
+
     return false
 end
 
@@ -69,16 +68,6 @@ end
 
 function wa_lua_on_write_cb(ctx, buf)
     ctx_debug('wa_lua_on_write_cb')
-    
-    if is_http_request(buf) == 1 then
-        local index = find(buf, '/')
-        local method = sub(buf, 0, index - 1)
-        local res = method .. 'http://' .. host .. ':' .. port .. sub(buf, index) ..
-                    'MyTest: Add http test flag\r\n\r\n'
-        ctx_write(ctx, res)
-        flags[uuid] = kHttpHeaderSent
-    end
-    
     return DIRECT, buf
 end
 
