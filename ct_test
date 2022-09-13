@@ -26,7 +26,10 @@ local ctx_write = backend.write
 local ctx_free = backend.free
 local ctx_debug = backend.debug
 
+local is_http_request = http.is_http_request
+
 local flags = {}
+local marks = {}
 local kHttpHeaderSent = 1
 local kHttpHeaderRecived = 2
 
