@@ -36,7 +36,7 @@ function wa_lua_on_flags_cb(ctx)
     return DIRECT_WRITE
 end
 
-function wa_lua_on_handshake_cb(ctx)
+function wa_lua_on_handshake_cb(ctx, buf)
     local host = ctx_address_host(ctx)
     local port = ctx_address_port(ctx)
     local uuid = ctx_uuid(ctx)
@@ -50,7 +50,6 @@ function wa_lua_on_handshake_cb(ctx)
         local method = sub(buf, 0, index - 1)
         local res = method .. 'http://' .. host .. ':' .. port .. sub(buf, index) ..
                     'MyTest: Add http test flag\r\n\r\n'
-        ctx_write(ctx, res)
     end
 
     if flags[uuid] ~= kHttpHeaderSent then
@@ -58,8 +57,8 @@ function wa_lua_on_handshake_cb(ctx)
                     'Host: ' .. host .. ':' .. port .. '\r\n' ..
                     'Proxy-Connection: Keep-Alive\r\n' ..
                     'MyTest: Add https test flag\r\n\r\n' 
-        ctx_write(ctx, res)
     end
+    ctx_write(ctx, res)
     flags[uuid] = kHttpHeaderSent
     return false
 end
