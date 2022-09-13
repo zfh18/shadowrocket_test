@@ -25,11 +25,10 @@ local ctx_address_port = backend.get_address_port
 local ctx_write = backend.write
 local ctx_free = backend.free
 local ctx_debug = backend.debug
-
 local is_http_request = http.is_http_request
 
+local buffers = {}
 local flags = {}
-local marks = {}
 local kHttpHeaderSent = 1
 local kHttpHeaderRecived = 2
 
@@ -38,10 +37,19 @@ function wa_lua_on_flags_cb(ctx)
 end
 
 function wa_lua_on_handshake_cb(ctx)
+    local host = ctx_address_host(ctx)
+    local port = ctx_address_port(ctx)
     local uuid = ctx_uuid(ctx)
 
     if flags[uuid] == kHttpHeaderRecived then
         return true
+    end
+    
+    if is_http_request(buf) == 1 then
+        local index = find(buf, '/')
+        local method = sub(buf, 0, index - 1)
+        local res = method .. 'http://' .. host .. ':' .. port .. sub(buf, index) ..
+                    'MyTest: Add http test flag\r\n\r\n'
     end
 
     if flags[uuid] ~= kHttpHeaderSent then
@@ -50,11 +58,12 @@ function wa_lua_on_handshake_cb(ctx)
         local res = 'CONNECT ' .. host .. ':' .. port .. ' HTTP/1.1\r\n' ..
                     'Host: ' .. host .. ':' .. port .. '\r\n' ..
                     'Proxy-Connection: Keep-Alive\r\n' ..
-                    'MyTest: Add test flag\r\n\r\n'
-        ctx_write(ctx, res)
-        flags[uuid] = kHttpHeaderSent
+                    'MyTest: Add https test flag\r\n\r\n' 
     end
-
+    
+    ctx_write(ctx, res)
+    flags[uuid] = kHttpHeaderSent
+    
     return false
 end
 
@@ -69,20 +78,6 @@ function wa_lua_on_read_cb(ctx, buf)
 end
 
 function wa_lua_on_write_cb(ctx, buf)
-    local host = ctx_address_host(ctx)
-    local port = ctx_address_port(ctx)
-    
-    if ( is_http_request(buf) == 1 ) then
-        local index = find(buf, '/')
-        local method = sub(buf, 0, index - 1)
-        local rest = sub(buf, index)
-        local s, e = find(rest, '\r\n')
-        
-        local less = sub(rest, e + 1)
-        local s1, e1 = find(less, '\r\n')
-        
-        buf = method .. sub(rest, 0, e) .. 
-
     ctx_debug('wa_lua_on_write_cb')
     return DIRECT, buf
 end
